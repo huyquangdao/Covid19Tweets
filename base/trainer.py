@@ -3,6 +3,8 @@ from tqdm import tqdm_notebook
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
 from metrics.metric import Metric
 from logs.writer import Writer
 
@@ -48,7 +50,7 @@ class Trainer(object):
 
         for callback in self.callbacks:
             if isinstance(callback, Writer):
-                callback.step(result, field_name, global_step)
+                callback.step(result, global_step)
             elif isinstance(callback, Metric):
                 pass
             else:
@@ -59,10 +61,14 @@ class Trainer(object):
             if isinstance(callback, Writer):
                 callback.execute(epoch)
 
-    def _reset_metrics(self, start_epoch = True):
+    def _reset_metrics(self, start_epoch=True):
         if start_epoch:
             for callback in self.callbacks:
-                if isinstance(callback, Metric) or isinstance(callback, Writer):
+                if isinstance(
+                        callback,
+                        Metric) or isinstance(
+                        callback,
+                        Writer):
                     callback.reset()
         else:
             for callback in self.callbacks:
@@ -83,8 +89,10 @@ class Trainer(object):
 
             train_loss = []
             test_loss = []
+            list_y_true = []
+            list_y_pred = []
 
-            self._reset_metrics(start_epoch= True)
+            self._reset_metrics(start_epoch=True)
             self.model.train()
 
             for batch in tqdm(train_loader):
@@ -110,14 +118,12 @@ class Trainer(object):
                     loss, y_true, y_pred = self._iter(
                         batch, gradient_clip, is_train=False)
                     test_loss.append(loss)
+                    list_y_true.extend(y_true)
+                    list_y_pred.extend(y_pred)
 
                     if self.callbacks is not None:
                         self._update_callbacks(
                             loss, y_true, y_pred, test_global_step, is_train=False)
-
-            train_average_loss = sum(train_loss) / len(train_loss)
-            if test_loader is not None:
-                test_average_loss = sum(test_loss) / len(test_loss)
 
             self._log_training(i + 1)
 

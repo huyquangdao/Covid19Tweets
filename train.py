@@ -3,7 +3,7 @@ from metrics.accuracy import AccuracyScore
 from metrics.f1score import F1Score
 from metrics.precision import PrecisionScore
 from metrics.recall import RecallScore
-from logs.writer import Writer
+from logs.writer import PandasWriter, TensorboardWriter
 from models.mnist_model import MNISTModel
 import torch.optim as optim
 import torch.nn as nn
@@ -38,9 +38,10 @@ trainer = MNISTTrainer(
     criterion=criterion,
     callbacks=[
         AccuracyScore(),
-        Writer(),
+        PandasWriter(),
+        TensorboardWriter(),
         F1Score(
-            average_type='macro'),
+            average_type='micro'),
         scheduler],
     device=torch.device('cpu'))
 
