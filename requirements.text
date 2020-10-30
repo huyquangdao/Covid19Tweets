@@ -1,3 +1,5 @@
 torch
 nltk
 torchtext
+emoji
+ekphrasis
